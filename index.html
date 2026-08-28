@@ -474,14 +474,51 @@
       `).join('');
     }
 
-    function checkAdminLogin() {
+    async function checkAdminLogin() {
       const pass = document.getElementById('admin-pass').value;
-      if (pass === "sy23030827") {
-        document.getElementById('admin-login-card').classList.add('hidden');
-        document.getElementById('admin-panel').classList.remove('hidden');
-        initAdminPanel();
-      } else {
-        alert("安全密碼錯誤，無法進入金庫後台！");
+      const url = getGasUrl();
+
+      if (!pass) {
+        alert("請輸入密碼！");
+        return;
+      }
+      if (!url) {
+        alert("尚未設定 Google Apps Script 網址，請先完成連線設定。");
+        return;
+      }
+
+      const loginBtn = document.querySelector('#admin-login-card button');
+      const originalText = loginBtn.innerText;
+      loginBtn.innerText = "驗證中...";
+      loginBtn.disabled = true;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避免觸發 CORS 預檢請求
+          body: JSON.stringify({ action: 'login', password: pass })
+        });
+
+        if (!response.ok) {
+          throw new Error(`伺服器回應錯誤 (狀態碼: ${response.status})`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('admin-login-card').classList.add('hidden');
+          document.getElementById('admin-panel').classList.remove('hidden');
+          document.getElementById('admin-pass').value = '';
+          initAdminPanel();
+        } else {
+          alert("安全密碼錯誤，無法進入金庫後台！");
+        }
+      } catch (e) {
+        console.error("登入驗證失敗:", e);
+        alert(`登入驗證失敗：${e.message}\n請確認 Apps Script 已重新部署且網址正確。`);
+      } finally {
+        loginBtn.innerText = originalText;
+        loginBtn.disabled = false;
       }
     }
 
