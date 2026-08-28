@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>雙中閱讀幣銀行--點石成金閱天下，雲端逐鹿爭鰲頭</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS (用於解析與匯出 Excel 檔案) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;600;800&display=swap');
+    
+    body { 
+      font-family: 'Noto Sans TC', sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+      background-color: #f8fafc; /* 淺灰白典雅背景 */
+      color: #0f172a; /* 深色高對比文字 */
+    }
+
+    .font-serif-title {
+      font-family: 'Noto Serif TC', serif;
+    }
+
+    /* 銀行典雅明亮卡片風格 */
+    .bank-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+
+    /* 金色主題文字標題 */
+    .gold-text {
+      background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #92400e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* 金色質感按鈕 */
+    .gold-button {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+    }
+
+    .gold-button:hover {
+      background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    }
+
+    /* 平滑橫向捲軸 */
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #d97706;
+    }
+  </style>
+</head>
+<body class="min-h-screen antialiased flex flex-col justify-between">
+
+  <div>
+    <!-- 頂部導覽列 (淺色皇家銀行風格) -->
+    <header class="bg-white/90 border-b border-amber-200/80 sticky top-0 z-50 shadow-sm backdrop-blur-md">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+        
+        <!-- 平台 Logo 與標題名稱 -->
+        <div class="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-200 flex items-center justify-center shadow-sm">
+            <span class="text-xl">🏛️</span>
+          </div>
+          <div class="text-center md:text-left">
+            <h1 class="text-lg sm:text-xl font-bold font-serif-title gold-text tracking-wide">雙中閱讀幣銀行</h1>
+            <p class="text-[10px] sm:text-xs text-amber-800/80 font-semibold tracking-wider">點石成金閱天下，雲端逐鹿爭鰲頭</p>
+          </div>
+        </div>
+        
+        <!-- 導覽頁籤按鈕 -->
+        <nav class="flex w-full md:w-auto justify-center space-x-1.5 sm:space-x-2">
+          <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 gold-button shadow-sm active:scale-95">🏛️ 個人財富榜</button>
+          <button onclick="switchTab('classRank')" id="btn-classRank" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🏢 班級金庫榜</button>
+          <button onclick="switchTab('admin')" id="btn-admin" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🔑 行長金庫後台</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-3 sm:p-6">
+
+      <!-- 頁籤 1：個人財富排行榜 -->
+      <section id="tab-leaderboard" class="space-y-4 sm:space-y-6">
+        
+        <!-- 全校金庫數據摘要卡片 -->
+        <div class="bank-card p-4 sm:p-6 rounded-2xl grid grid-cols-3 text-center gap-2 sm:gap-4 relative overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+          <div class="p-1">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">總開戶儲戶數</p>
+            <p id="stat-total-students" class="text-base sm:text-2xl font-extrabold text-amber-600 mt-1">0 人</p>
+          </div>
+          <div class="p-1 border-x border-slate-200">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">全行總存款 (閱讀幣)</p>
+            <p id="stat-total-xp" class="text-base sm:text-2xl font-extrabold text-emerald-600 mt-1">0 幣</p>
+          </div>
+          <div class="p-1">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">首席富豪首富</p>
+            <p id="stat-top-player" class="text-base sm:text-2xl font-extrabold gold-text mt-1 truncate">-</p>
+          </div>
+        </div>
+
+        <!-- 排行榜表格卡片 -->
+        <div class="bank-card rounded-2xl p-4 sm:p-6">
+          <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏆 個人閱讀幣儲蓄富豪榜 (TOP 15)</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
+              <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
+                <tr>
+                  <th class="p-3">席次</th>
+                  <th class="p-3">儲戶戶名</th>
+                  <th class="p-3">所屬分行 (班級)</th>
+                  <th class="p-3">閱讀幣總資產</th>
+                  <th class="p-3">財富階級等級</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body" class="divide-y divide-slate-100">
+                <!-- 動態生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁籤 2：班級金庫榜 -->
+      <section id="tab-classRank" class="space-y-4 sm:space-y-6 hidden">
+        <div class="bank-card rounded-2xl p-4 sm:p-6">
+          <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏢 班級分行儲蓄資產總榜</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
+              <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
+                <tr>
+                  <th class="p-3">排名</th>
+                  <th class="p-3">分行名稱</th>
+                  <th class="p-3">班級閱讀幣總資產</th>
+                  <th class="p-3">分行資本評級</th>
+                </tr>
+              </thead>
+              <tbody id="class-rank-body" class="divide-y divide-slate-100">
+                <!-- 動態生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 頁籤 3：管理基地 -->
+      <section id="tab-admin" class="space-y-4 sm:space-y-6 hidden">
+        
+        <!-- 登入卡片 -->
+        <div id="admin-login-card" class="max-w-md mx-auto bank-card p-6 rounded-2xl space-y-4 mt-6">
+          <h2 class="text-lg sm:text-xl font-bold text-center text-amber-800 font-serif-title">🔑 金庫最高密鑰驗證</h2>
+          <input type="password" id="admin-pass" placeholder="請輸入行長安全密碼" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white" onkeydown="if(event.key==='Enter') checkAdminLogin()">
+          <button onclick="checkAdminLogin()" class="w-full gold-button font-bold py-3 rounded-xl transition shadow-sm active:scale-98">驗證登入金庫</button>
+          <p class="text-center text-xs text-amber-700 font-semibold pt-2">雙園書屋</p>
+        </div>
+
+        <!-- 管理後台主體 -->
+        <div id="admin-panel" class="hidden space-y-4 sm:space-y-6">
+          
+          <!-- 行政進階功能 -->
+          <div class="bank-card p-4 sm:p-6 rounded-2xl space-y-3 sm:space-y-4">
+            <h3 class="font-bold text-sm sm:text-base text-amber-800 flex items-center gap-2">⚡ 金庫帳冊與資料備份</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+              
+              <!-- Excel 匯入 -->
+              <div class="bg-slate-50 p-3.5 sm:p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                <div>
+                  <label class="block text-xs font-bold text-amber-800 mb-1.5">📁 匯入儲戶名冊 Excel (.xlsx)</label>
+                  <input type="file" id="excel-file" accept=".xlsx, .xls" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-100 file:text-amber-800 hover:file:bg-amber-200">
+                  <p class="text-[10px] text-slate-400 mt-1.5">欄位請包含「班級」與「姓名」</p>
+                </div>
+              </div>
+
+              <!-- 一鍵下載備份 -->
+              <div class="bg-slate-50 p-3.5 sm:p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                <div>
+                  <p class="text-xs font-bold text-amber-800">📄 匯出全行閱讀幣資產總表</p>
+                  <p class="text-[11px] text-slate-500 mt-1">匯出帶有時間戳記的銀行帳冊 Excel 報表。</p>
+                </div>
+                <button onclick="exportToExcel()" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-xs text-white font-bold py-2.5 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow-sm active:scale-98">
+                  📥 下載資產報表 Excel
+                </button>
+              </div>
+
+              <!-- 學期重置 -->
+              <div class="bg-slate-50 p-3.5 sm:p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+                <div>
+                  <p class="text-xs font-bold text-red-600">⚠️ 金庫清算重置</p>
+                  <p class="text-[11px] text-slate-500 mt-1">清空全行所有儲戶資料與閱讀幣存款。</p>
+                </div>
+                <button onclick="resetSystemData()" class="mt-3 bg-red-600 hover:bg-red-700 text-xs text-white font-bold py-2.5 px-3 rounded-lg transition shadow-sm active:scale-98">清空金庫資料</button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 手動開戶 -->
+          <div class="bank-card p-4 sm:p-6 rounded-2xl space-y-3 sm:space-y-4">
+            <h3 class="font-bold text-sm sm:text-base text-amber-800 flex items-center gap-2">👤 手動開戶 (新增轉學生 / 新生)</h3>
+            <form onsubmit="addSingleStudent(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+              <input type="text" id="new-class" placeholder="班級 (如: 801)" required class="p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white">
+              <input type="text" id="new-name" placeholder="儲戶姓名" required class="p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white">
+              <input type="number" id="new-xp" placeholder="開戶閱讀幣 (預設 0)" min="0" class="p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs sm:text-sm text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white">
+              <button type="submit" class="gold-button font-bold py-2.5 rounded-xl transition text-xs sm:text-sm shadow-sm active:scale-98">＋ 建立帳戶</button>
+            </form>
+          </div>
+
+          <!-- 存款發放與帳戶管理 -->
+          <div class="bank-card p-4 sm:p-6 rounded-2xl space-y-4">
+            
+            <div class="flex flex-col md:flex-row justify-between md:items-center gap-3 border-b border-slate-200 pb-3">
+              <h3 class="font-bold text-sm sm:text-base text-amber-800">💰 儲戶閱讀幣劃撥與存劃作業</h3>
+              
+              <div class="grid grid-cols-2 sm:flex sm:items-center gap-2">
+                <select id="class-select" onchange="renderAdminStudents()" class="bg-slate-50 border border-slate-300 p-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 focus:outline-none focus:border-amber-500 col-span-1">
+                  <!-- 動態生成班級選項 -->
+                </select>
+
+                <input type="text" id="search-input" onkeyup="renderAdminStudents()" placeholder="搜尋姓名..." class="p-2 border border-slate-300 rounded-xl text-xs sm:text-sm bg-slate-50 text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white col-span-1">
+
+                <button onclick="addXPToClass(1)" class="col-span-2 sm:col-span-1 gold-button px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm active:scale-98 whitespace-nowrap">
+                  🎉 全班發放 +1 幣
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto custom-scrollbar">
+              <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
+                <thead class="bg-slate-100 uppercase text-[11px] sm:text-xs text-slate-600">
+                  <tr>
+                    <th class="p-3">班級</th>
+                    <th class="p-3">姓名</th>
+                    <th class="p-3">閱讀幣資產</th>
+                    <th class="p-3">快速存劃發放</th>
+                    <th class="p-3 text-right">銷戶</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-students-body" class="divide-y divide-slate-100">
+                  <!-- 動態生成學生清單 -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 頁尾聲明標示 -->
+  <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+    <div class="max-w-6xl mx-auto px-4 space-y-1">
+      <p class="font-medium text-slate-700">🏛️ 雙中閱讀幣銀行系統</p>
+      <p class="text-amber-700 font-bold tracking-widest text-xs">雙園書屋</p>
+    </div>
+  </footer>
+
+  <script>
+    // 預設示範資料
+    const defaultData = [
+      { id: 1, class: "901", name: "許庭瑋", xp: 260 },
+      { id: 2, class: "901", name: "劉芷妍", xp: 180 },
+      { id: 3, class: "801", name: "蔡承恩", xp: 95 },
+      { id: 4, class: "701", name: "王小明", xp: 35 },
+      { id: 5, class: "701", name: "陳小恩", xp: 10 }
+    ];
+
+    // 初始化 LocalStorage 資料
+    function getStudents() {
+      const data = localStorage.getItem('school_reading_students');
+      return data ? JSON.parse(data) : defaultData;
+    }
+
+    function saveStudents(data) {
+      localStorage.setItem('school_reading_students', JSON.stringify(data));
+      refreshAll();
+    }
+
+    // 姓名自動遮蔽處理
+    function maskName(name) {
+      if (!name) return "";
+      if (name.length <= 2) return name[0] + "○";
+      return name[0] + "○" + name.slice(2);
+    }
+
+    // 銀行四大等級劃分：開戶新星級、穩健儲戶級、尊榮大戶級、首席富豪級
+    function getLevelInfo(xp) {
+      if (xp >= 200) {
+        return { 
+          badge: "👑 首席富豪級", 
+          style: "bg-amber-100 text-amber-800 border border-amber-300" 
+        };
+      } else if (xp >= 100) {
+        return { 
+          badge: "💎 尊榮大戶級", 
+          style: "bg-sky-100 text-sky-800 border border-sky-300" 
+        };
+      } else if (xp >= 30) {
+        return { 
+          badge: "🪙 穩健儲戶級", 
+          style: "bg-emerald-100 text-emerald-800 border border-emerald-300" 
+        };
+      } else {
+        return { 
+          badge: "🌱 開戶新星級", 
+          style: "bg-slate-100 text-slate-700 border border-slate-300" 
+        };
+      }
+    }
+
+    // 頁籤切換邏輯
+    function switchTab(tabName) {
+      ['leaderboard', 'classRank', 'admin'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`btn-${t}`).classList.remove('gold-button');
+        document.getElementById(`btn-${t}`).classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+      });
+      
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`btn-${tabName}`).classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+      document.getElementById(`btn-${tabName}`).classList.add('gold-button');
+    }
+
+    // 渲染個人排行榜
+    function renderLeaderboard() {
+      const students = getStudents();
+      const sorted = [...students].sort((a, b) => b.xp - a.xp);
+      
+      // 更新上方儀表板
+      document.getElementById('stat-total-students').innerText = `${students.length} 人`;
+      document.getElementById('stat-total-xp').innerText = `${students.reduce((acc, s) => acc + s.xp, 0)} 閱讀幣`;
+      document.getElementById('stat-top-player').innerText = sorted[0] ? maskName(sorted[0].name) : '-';
+
+      // 渲染表格
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = sorted.slice(0, 15).map((s, idx) => {
+        const level = getLevelInfo(s.xp);
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-3 font-bold text-slate-700">${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}</td>
+            <td class="p-3 font-medium text-slate-800">${maskName(s.name)}</td>
+            <td class="p-3 text-slate-500">${s.class} 班</td>
+            <td class="p-3 font-bold text-amber-600">${s.xp} 幣</td>
+            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${level.style}">${level.badge}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 渲染班級戰力榜
+    function renderClassRank() {
+      const students = getStudents();
+      const classMap = {};
+
+      students.forEach(s => {
+        classMap[s.class] = (classMap[s.class] || 0) + s.xp;
+      });
+
+      const sortedClasses = Object.keys(classMap)
+        .map(c => ({ class: c, xp: classMap[c] }))
+        .sort((a, b) => b.xp - a.xp);
+
+      const tbody = document.getElementById('class-rank-body');
+      tbody.innerHTML = sortedClasses.map((c, idx) => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 font-bold text-slate-700">${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}</td>
+          <td class="p-3 font-medium text-slate-800">${c.class} 班分行</td>
+          <td class="p-3 font-bold text-emerald-600">${c.xp} 閱讀幣</td>
+          <td class="p-3 font-medium text-slate-600">${c.xp > 500 ? '🏛️ 旗艦金庫分行' : '🏦 標竿成長分行'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 管理者登入驗證 (密碼：sy23030827)
+    function checkAdminLogin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === "sy23030827") {
+        document.getElementById('admin-login-card').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        initAdminPanel();
+      } else {
+        alert("安全密碼錯誤，無法進入金庫後台！");
+      }
+    }
+
+    // 初始化管理後台
+    function initAdminPanel() {
+      const students = getStudents();
+      const classes = [...new Set(students.map(s => s.class))].sort();
+      const select = document.getElementById('class-select');
+      
+      const currentVal = select.value;
+      select.innerHTML = '<option value="ALL">🔍 全部班級分行</option>' + classes.map(c => `<option value="${c}">${c} 班</option>`).join('');
+      if (currentVal && (currentVal === "ALL" || classes.includes(currentVal))) {
+        select.value = currentVal;
+      }
+      renderAdminStudents();
+    }
+
+    // 渲染管理後台學生清單
+    function renderAdminStudents() {
+      const selectedClass = document.getElementById('class-select').value || 'ALL';
+      const searchText = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const allStudents = getStudents();
+
+      let students = selectedClass === 'ALL' 
+        ? allStudents 
+        : allStudents.filter(s => s.class === selectedClass);
+
+      if (searchText) {
+        students = students.filter(s => s.name.toLowerCase().includes(searchText));
+      }
+
+      const tbody = document.getElementById('admin-students-body');
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">查無相關儲戶資料</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 text-slate-500 font-medium">${s.class}</td>
+          <td class="p-3 font-medium text-slate-800">${s.name}</td>
+          <td class="p-3 text-amber-600 font-bold">${s.xp} 閱讀幣</td>
+          <td class="p-3">
+            <div class="inline-flex items-center gap-1 flex-wrap">
+              <button onclick="addXP(${s.id}, 1)" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-800 active:scale-95 transition">+1</button>
+              <button onclick="addXP(${s.id}, 5)" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-800 active:scale-95 transition">+5</button>
+              <button onclick="addXP(${s.id}, 10)" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 py-1 rounded-lg text-xs font-bold text-amber-800 active:scale-95 transition">+10</button>
+              <button onclick="addXP(${s.id}, -1)" class="bg-rose-100 hover:bg-rose-200 border border-rose-300 px-2.5 py-1 rounded-lg text-xs font-bold text-rose-700 active:scale-95 transition">-1</button>
+              <button onclick="addXP(${s.id}, -5)" class="bg-rose-100 hover:bg-rose-200 border border-rose-300 px-2.5 py-1 rounded-lg text-xs font-bold text-rose-700 active:scale-95 transition">-5</button>
+            </div>
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="deleteStudent(${s.id}, '${s.name}')" class="bg-slate-100 hover:bg-rose-100 text-slate-500 hover:text-rose-600 border border-slate-300 hover:border-rose-300 px-2.5 py-1 rounded-lg text-xs font-semibold transition active:scale-95">
+              🗑️ 銷戶
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 微調單一學生閱讀幣
+    function addXP(studentId, amount) {
+      const students = getStudents();
+      const target = students.find(s => s.id === studentId);
+      if (target) {
+        target.xp = Math.max(0, target.xp + amount);
+        saveStudents(students);
+      }
+    }
+
+    // 全班性劃撥發放閱讀幣
+    function addXPToClass(amount) {
+      const selectedClass = document.getElementById('class-select').value;
+      const students = getStudents();
+
+      if (selectedClass === 'ALL') {
+        if (!confirm("確定要向「全校所有儲戶」發放 1 閱讀幣存款嗎？")) return;
+        students.forEach(s => s.xp += amount);
+      } else {
+        const classStudents = students.filter(s => s.class === selectedClass);
+        if (classStudents.length === 0) {
+          alert("該班級無儲戶資料！");
+          return;
+        }
+        students.forEach(s => {
+          if (s.class === selectedClass) {
+            s.xp = Math.max(0, s.xp + amount);
+          }
+        });
+      }
+
+      saveStudents(students);
+      alert(selectedClass === 'ALL' ? "已成功為全校儲戶存入 1 閱讀幣！" : `已成功為 ${selectedClass} 班全體儲戶存入 1 閱讀幣！`);
+    }
+
+    // 手動開戶
+    function addSingleStudent(e) {
+      e.preventDefault();
+      const className = document.getElementById('new-class').value.trim();
+      const name = document.getElementById('new-name').value.trim();
+      const xp = parseInt(document.getElementById('new-xp').value) || 0;
+
+      if (!className || !name) {
+        alert("請完整填寫班級與儲戶姓名！");
+        return;
+      }
+
+      const students = getStudents();
+      const newStudent = {
+        id: Date.now(),
+        class: className,
+        name: name,
+        xp: xp
+      };
+
+      students.push(newStudent);
+      saveStudents(students);
+      initAdminPanel();
+
+      document.getElementById('new-class').value = '';
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-xp').value = '';
+
+      alert(`開戶成功！已建立：${className} 班 ${name}`);
+    }
+
+    // 銷戶刪除學生
+    function deleteStudent(studentId, name) {
+      if (confirm(`確定要為儲戶「${name}」辦理銷戶並清空閱讀幣嗎？此動作不可復原！`)) {
+        const students = getStudents().filter(s => s.id !== studentId);
+        saveStudents(students);
+        initAdminPanel();
+      }
+    }
+
+    // Excel 匯入
+    document.getElementById('excel-file').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+
+        const newStudents = json.map((item, index) => ({
+          id: Date.now() + index,
+          class: String(item['班級'] || item['class'] || "701"),
+          name: String(item['姓名'] || item['name'] || "儲戶"),
+          xp: Number(item['閱讀幣'] || item['XP'] || item['積分'] || 0)
+        }));
+
+        if (newStudents.length > 0) {
+          saveStudents(newStudents);
+          initAdminPanel();
+          alert(`開戶成功！已順利匯入 ${newStudents.length} 位儲戶資料！`);
+        } else {
+          alert("Excel 格式錯誤，請確保標題包含「班級」與「姓名」！");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // 匯出 Excel 報表
+    function exportToExcel() {
+      const students = getStudents();
+      if (students.length === 0) {
+        alert("目前金庫內無任何儲戶資料！");
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      const fileDateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
+      const sortedStudents = [...students].sort((a, b) => a.class.localeCompare(b.class) || b.xp - a.xp);
+
+      const exportData = sortedStudents.map((s, index) => ({
+        "帳號編號": index + 1,
+        "所屬分行(班級)": s.class,
+        "戶名": s.name,
+        "閱讀幣資產": s.xp,
+        "財富等級": getLevelInfo(s.xp).badge.replace(/^[^\s]+\s/, ''),
+        "結算時間": timeStr
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      worksheet['!cols'] = [
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 20 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "閱讀幣資產帳冊");
+
+      const filename = `雙中閱讀幣銀行資產總表_${fileDateStr}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+    }
+
+    // 重置資料
+    function resetSystemData() {
+      if (confirm("確定要進行金庫清算並清空全行所有資料嗎？此動作無法復原！")) {
+        localStorage.removeItem('school_reading_students');
+        refreshAll();
+        initAdminPanel();
+        alert("金庫已完成重置！");
+      }
+    }
+
+    // 重新整理頁面資料
+    function refreshAll() {
+      renderLeaderboard();
+      renderClassRank();
+      if (!document.getElementById('admin-panel').classList.contains('hidden')) {
+        renderAdminStudents();
+      }
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>
