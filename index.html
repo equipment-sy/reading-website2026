@@ -81,16 +81,6 @@
 
       <section id="tab-leaderboard" class="space-y-4 sm:space-y-6">
 
-        <div class="bank-card p-3 sm:p-4 rounded-2xl space-y-2">
-          <p class="text-xs font-bold text-amber-800">⚙️ Google Apps Script 網址設定</p>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <input type="text" id="gas-url-input" placeholder="貼上部署後產生、以 /exec 結尾的網址"
-              class="flex-1 p-2 rounded-xl bg-slate-50 border border-slate-300 text-xs text-slate-800 focus:outline-none focus:border-amber-500 focus:bg-white">
-            <button onclick="saveGasUrl()" class="gold-button px-4 py-2 rounded-xl text-xs font-bold active:scale-95 whitespace-nowrap">💾 儲存並同步</button>
-          </div>
-          <p class="text-[10px] text-slate-400">此網址只需設定一次，會儲存在此瀏覽器中。設定步驟請見 Code.gs 檔案內的說明。</p>
-        </div>
-        
         <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
           <p class="text-xs text-slate-500" id="sync-status">雲端學生名冊同步狀態：初始化中...</p>
           <button onclick="fetchGoogleSheetsData()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
@@ -165,6 +155,21 @@
         </div>
 
         <div id="admin-panel" class="hidden space-y-4 sm:space-y-6">
+          <div class="bank-card p-4 sm:p-6 rounded-2xl space-y-3 sm:space-y-4">
+            <h3 class="font-bold text-sm sm:text-base text-amber-800 flex items-center gap-2">⚙️ Google Apps Script 連線設定</h3>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 space-y-2">
+              <p class="text-[11px] text-amber-800 leading-relaxed">
+                ⚠️ 這裡的設定只會存在<b>你目前這台裝置的瀏覽器</b>裡，學生或家長打開網站時並不會看到你在這裡設的網址。<br>
+                若要讓「所有人」打開網站都能自動看到資料，請把正式網址直接寫進 HTML 檔案原始碼中的 <code class="bg-white px-1 rounded">DEFAULT_GAS_URL</code> 常數，存檔後再上傳到學校網路，才會對所有訪客生效。
+              </p>
+              <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                <input type="text" id="gas-url-input" placeholder="（僅供你本機測試用）貼上以 /exec 結尾的網址"
+                  class="flex-1 p-2 rounded-xl bg-white border border-amber-300 text-xs text-slate-800 focus:outline-none focus:border-amber-500">
+                <button onclick="saveGasUrl()" class="gold-button px-4 py-2 rounded-xl text-xs font-bold active:scale-95 whitespace-nowrap">💾 本機測試同步</button>
+              </div>
+            </div>
+          </div>
+
           <div class="bank-card p-4 sm:p-6 rounded-2xl space-y-3 sm:space-y-4">
             <h3 class="font-bold text-sm sm:text-base text-amber-800 flex items-center gap-2">⚡ 金庫帳冊與資料備份</h3>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
@@ -254,14 +259,22 @@
   </footer>
 
   <script>
-    // 網址設定改為可在畫面上輸入並儲存在瀏覽器 localStorage 中（key: gas_api_url）
-    // 若想在程式碼裡直接寫死網址，也可以把下面這行換成你的 /exec 網址
+    // ★★★ 正式上線前，請務必把 Google Apps Script 部署後產生、結尾為 /exec 的網址
+    // 直接貼在下面兩個引號中間，例如：
+    // const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycb.../exec";
+    // 這一步做完並存檔上傳後，「所有訪客」打開網站都會自動看到即時資料，
+    // 不需要任何人手動貼網址或按儲存。
     const DEFAULT_GAS_URL = "";
 
     const defaultData = [];
 
     function getGasUrl() {
-      return localStorage.getItem('gas_api_url') || DEFAULT_GAS_URL;
+      // 只要 DEFAULT_GAS_URL 有填，一律優先使用它（讓所有訪客都吃到同一個網址）
+      if (DEFAULT_GAS_URL && DEFAULT_GAS_URL.trim() !== "") {
+        return DEFAULT_GAS_URL.trim();
+      }
+      // 尚未寫死網址時，退而使用本機瀏覽器暫存的網址（僅供你自己測試用）
+      return localStorage.getItem('gas_api_url') || "";
     }
 
     function saveGasUrl() {
@@ -692,7 +705,11 @@
       }
     }
 
-    // 頁面載入時，先把已儲存的網址帶入輸入框，再嘗試同步
-    document.getElementById('gas-url-input').value = getGasUrl();
+    // 頁面載入時，先把已儲存的網址帶入輸入框（僅供本機測試），再嘗試同步
+    const gasUrlInputEl = document.getElementById('gas-url-input');
+    if (gasUrlInputEl) gasUrlInputEl.value = localStorage.getItem('gas_api_url') || '';
     fetchGoogleSheetsData();
+
+    // 每 60 秒自動重新同步一次，讓所有訪客看到的數字接近即時更新
+    setInterval(fetchGoogleSheetsData, 60000);
   </script></body></html>
