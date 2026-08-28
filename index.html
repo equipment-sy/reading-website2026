@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>雙中閱讀護照積分｜校園閱讀積分平台 Pro</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS (用於解析與匯出 Excel 檔案) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800&display=swap');
+    body { font-family: 'Noto Sans TC', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- 頂部導覽列 -->
+  <header class="bg-white border-b border-slate-200 p-4 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <span class="text-3xl">📚</span>
+        <div>
+          <h1 class="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">雙中閱讀護照積分</h1>
+          <p class="text-xs text-slate-500">校園閱讀積分與挑戰系統 Pro</p>
+        </div>
+      </div>
+      
+      <!-- 導覽頁籤 -->
+      <nav class="flex space-x-2">
+        <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-amber-500 text-white shadow-sm">🏆 排行榜</button>
+        <button onclick="switchTab('classRank')" id="btn-classRank" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-200 hover:bg-slate-300 text-slate-700">🔥 班級戰力</button>
+        <button onclick="switchTab('admin')" id="btn-admin" class="px-4 py-2 rounded-lg text-sm font-semibold transition bg-slate-200 hover:bg-slate-300 text-slate-700">⚙️ 管理基地</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 md:p-6">
+
+    <!-- 頁籤 1：個人排行榜 -->
+    <section id="tab-leaderboard" class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap justify-around text-center gap-4">
+        <div>
+          <p class="text-xs text-slate-500">全校參與人數</p>
+          <p id="stat-total-students" class="text-2xl font-extrabold text-amber-600">0 人</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">全校累積 XP</p>
+          <p id="stat-total-xp" class="text-2xl font-extrabold text-emerald-600">0 XP</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500">目前閱讀王者</p>
+          <p id="stat-top-player" class="text-2xl font-extrabold text-orange-600">-</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">🏆 全校個人榜 (TOP 15)</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+              <tr>
+                <th class="p-3">名次</th>
+                <th class="p-3">玩家</th>
+                <th class="p-3">班級</th>
+                <th class="p-3">XP</th>
+                <th class="p-3">稱號</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body" class="divide-y divide-slate-100">
+              <!-- 動態生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 頁籤 2：班級戰力榜 -->
+    <section id="tab-classRank" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-slate-800">🔥 班級總戰力排行榜</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700">
+            <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+              <tr>
+                <th class="p-3">名次</th>
+                <th class="p-3">班級</th>
+                <th class="p-3">全班總 XP</th>
+                <th class="p-3">戰隊階級</th>
+              </tr>
+            </thead>
+            <tbody id="class-rank-body" class="divide-y divide-slate-100">
+              <!-- 動態生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 頁籤 3：管理基地 -->
+    <section id="tab-admin" class="space-y-6 hidden">
+      <!-- 登入卡片 -->
+      <div id="admin-login-card" class="max-w-md mx-auto bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-xl font-bold text-center text-slate-800">🔐 管理者驗證</h2>
+        <input type="password" id="admin-pass" placeholder="請輸入管理者密碼" class="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-800 focus:outline-none focus:border-amber-500" onkeydown="if(event.key==='Enter') checkAdminLogin()">
+        <button onclick="checkAdminLogin()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg transition shadow-sm">驗證登入</button>
+      </div>
+
+      <!-- 管理後台主體（驗證成功後顯示） -->
+      <div id="admin-panel" class="hidden space-y-6">
+        
+        <!-- 行政進階功能：Excel 匯入/匯出與重置 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-amber-600 flex items-center gap-2">⚡ 行政與備份工具箱</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            
+            <!-- Excel 匯入 -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-2">📁 匯入全校學生 Excel (.xlsx)</label>
+                <input type="file" id="excel-file" accept=".xlsx, .xls" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
+                <p class="text-[10px] text-slate-400 mt-2">欄位標題請包含「班級」與「姓名」</p>
+              </div>
+            </div>
+
+            <!-- 一鍵下載備份 (備份紙本/Excel) -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+              <div>
+                <p class="text-xs font-semibold text-slate-600">📄 一鍵匯出報表 (備份/紙本列印)</p>
+                <p class="text-[11px] text-slate-400 mt-1">匯出帶有時間戳記的全校閱讀積分 Excel 報表。</p>
+              </div>
+              <button onclick="exportToExcel()" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-xs text-white font-bold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1 shadow-sm">
+                📥 下載全校積分報表
+              </button>
+            </div>
+
+            <!-- 學期重置 -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col justify-between">
+              <div>
+                <p class="text-xs font-semibold text-slate-600">⚠️ 學期重置</p>
+                <p class="text-[11px] text-slate-400 mt-1">清空目前所有學生點數與資料。</p>
+              </div>
+              <button onclick="resetSystemData()" class="mt-3 bg-red-500 hover:bg-red-600 text-xs text-white font-bold py-2 px-3 rounded-lg transition shadow-sm">重置全系統資料</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 手動新增學生 (轉學生/新生) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">👤 手動新增學生 (轉學生 / 新生)</h3>
+          <form onsubmit="addSingleStudent(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input type="text" id="new-class" placeholder="班級 (如: 801)" required class="p-2.5 rounded-lg bg-slate-50 border border-slate-300 text-sm text-slate-800 focus:outline-none focus:border-amber-500">
+            <input type="text" id="new-name" placeholder="學生姓名" required class="p-2.5 rounded-lg bg-slate-50 border border-slate-300 text-sm text-slate-800 focus:outline-none focus:border-amber-500">
+            <input type="number" id="new-xp" placeholder="初始 XP (預設 0)" min="0" class="p-2.5 rounded-lg bg-slate-50 border border-slate-300 text-sm text-slate-800 focus:outline-none focus:border-amber-500">
+            <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-lg transition text-sm shadow-sm">＋ 新增學生</button>
+          </form>
+        </div>
+
+        <!-- 快速計分與學生管理介面 -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center flex-wrap gap-3">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2">🎮 班級學生點數管理</h3>
+            
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- 班級快速選擇區 -->
+              <div class="flex items-center space-x-1">
+                <span class="text-xs font-bold text-slate-500">選擇班級：</span>
+                <select id="class-select" onchange="renderAdminStudents()" class="bg-slate-50 border border-slate-300 p-2 rounded-lg text-sm text-slate-700 font-bold focus:outline-none focus:border-amber-500">
+                  <!-- 動態生成班級選項 -->
+                </select>
+              </div>
+
+              <!-- 搜尋姓名 -->
+              <input type="text" id="search-input" onkeyup="renderAdminStudents()" placeholder="搜尋姓名..." class="p-2 border border-slate-300 rounded-lg text-xs bg-slate-50 focus:outline-none focus:border-amber-500">
+
+              <button onclick="addXPToClass(1)" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 rounded-lg text-xs font-bold transition shadow-sm">
+                🎉 全班 +1 分
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+              <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                <tr>
+                  <th class="p-3">班級</th>
+                  <th class="p-3">姓名</th>
+                  <th class="p-3">目前 XP</th>
+                  <th class="p-3">點數微調 (加/扣分)</th>
+                  <th class="p-3 text-right">操作</th>
+                </tr>
+              </thead>
+              <tbody id="admin-students-body" class="divide-y divide-slate-100">
+                <!-- 動態生成學生清單 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // 預設示範資料
+    const defaultData = [
+      { id: 1, class: "901", name: "許庭瑋", xp: 260 },
+      { id: 2, class: "901", name: "劉芷妍", xp: 230 },
+      { id: 3, class: "801", name: "蔡承恩", xp: 210 },
+      { id: 4, class: "701", name: "王小明", xp: 120 },
+      { id: 5, class: "701", name: "陳小恩", xp: 95 }
+    ];
+
+    // 初始化 LocalStorage 資料
+    function getStudents() {
+      const data = localStorage.getItem('school_reading_students');
+      return data ? JSON.parse(data) : defaultData;
+    }
+
+    function saveStudents(data) {
+      localStorage.setItem('school_reading_students', JSON.stringify(data));
+      refreshAll();
+    }
+
+    // 姓名自動遮蔽處理
+    function maskName(name) {
+      if (!name) return "";
+      if (name.length <= 2) return name[0] + "○";
+      return name[0] + "○" + name.slice(2);
+    }
+
+    // 稱號計算
+    function getTitle(xp) {
+      if (xp >= 200) return "👑 閱讀王者";
+      if (xp >= 150) return "🌟 閱讀達人";
+      if (xp >= 100) return "📚 書蟲";
+      return "🌱 閱讀新手";
+    }
+
+    // 頁籤切換邏輯
+    function switchTab(tabName) {
+      ['leaderboard', 'classRank', 'admin'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`btn-${t}`).classList.remove('bg-amber-500', 'text-white', 'shadow-sm');
+        document.getElementById(`btn-${t}`).classList.add('bg-slate-200', 'hover:bg-slate-300', 'text-slate-700');
+      });
+      
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`btn-${tabName}`).classList.remove('bg-slate-200', 'hover:bg-slate-300', 'text-slate-700');
+      document.getElementById(`btn-${tabName}`).classList.add('bg-amber-500', 'text-white', 'shadow-sm');
+    }
+
+    // 渲染個人排行榜
+    function renderLeaderboard() {
+      const students = getStudents();
+      const sorted = [...students].sort((a, b) => b.xp - a.xp);
+      
+      // 更新上方儀表板
+      document.getElementById('stat-total-students').innerText = `${students.length} 人`;
+      document.getElementById('stat-total-xp').innerText = `${students.reduce((acc, s) => acc + s.xp, 0)} XP`;
+      document.getElementById('stat-top-player').innerText = sorted[0] ? maskName(sorted[0].name) : '-';
+
+      // 渲染表格
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = sorted.slice(0, 15).map((s, idx) => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 font-bold">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</td>
+          <td class="p-3 font-medium text-slate-800">${maskName(s.name)}</td>
+          <td class="p-3 text-slate-500">${s.class}</td>
+          <td class="p-3 font-bold text-amber-600">${s.xp}</td>
+          <td class="p-3">${getTitle(s.xp)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 渲染班級戰力榜
+    function renderClassRank() {
+      const students = getStudents();
+      const classMap = {};
+
+      students.forEach(s => {
+        classMap[s.class] = (classMap[s.class] || 0) + s.xp;
+      });
+
+      const sortedClasses = Object.keys(classMap)
+        .map(c => ({ class: c, xp: classMap[c] }))
+        .sort((a, b) => b.xp - a.xp);
+
+      const tbody = document.getElementById('class-rank-body');
+      tbody.innerHTML = sortedClasses.map((c, idx) => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 font-bold">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</td>
+          <td class="p-3 font-medium text-slate-800">${c.class} 班</td>
+          <td class="p-3 font-bold text-emerald-600">${c.xp} XP</td>
+          <td class="p-3">${c.xp > 300 ? '🔥 強者戰隊' : '🌱 起步戰隊'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // 管理者登入驗證 (已更新密碼)
+    function checkAdminLogin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === "sy23030827") {
+        document.getElementById('admin-login-card').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        initAdminPanel();
+      } else {
+        alert("密碼錯誤，請重新輸入！");
+      }
+    }
+
+    // 初始化管理後台
+    function initAdminPanel() {
+      const students = getStudents();
+      const classes = [...new Set(students.map(s => s.class))].sort();
+      const select = document.getElementById('class-select');
+      
+      const currentVal = select.value;
+      select.innerHTML = '<option value="ALL">🔍 全部班級</option>' + classes.map(c => `<option value="${c}">${c} 班</option>`).join('');
+      if (currentVal && (currentVal === "ALL" || classes.includes(currentVal))) {
+        select.value = currentVal;
+      }
+      renderAdminStudents();
+    }
+
+    // 渲染管理後台學生清單 (可根據班級與搜尋進行過濾)
+    function renderAdminStudents() {
+      const selectedClass = document.getElementById('class-select').value || 'ALL';
+      const searchText = (document.getElementById('search-input').value || '').trim().toLowerCase();
+      const allStudents = getStudents();
+
+      let students = selectedClass === 'ALL' 
+        ? allStudents 
+        : allStudents.filter(s => s.class === selectedClass);
+
+      if (searchText) {
+        students = students.filter(s => s.name.toLowerCase().includes(searchText));
+      }
+
+      const tbody = document.getElementById('admin-students-body');
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">查無相關學生資料</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = students.map(s => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="p-3 text-slate-500 font-medium">${s.class}</td>
+          <td class="p-3 font-medium text-slate-800">${s.name}</td>
+          <td class="p-3 text-amber-600 font-bold">${s.xp} XP</td>
+          <td class="p-3 space-x-1">
+            <button onclick="addXP(${s.id}, 1)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded text-xs font-bold text-amber-600">+1</button>
+            <button onclick="addXP(${s.id}, 5)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded text-xs font-bold text-amber-600">+5</button>
+            <button onclick="addXP(${s.id}, 10)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded text-xs font-bold text-amber-600">+10</button>
+            <button onclick="addXP(${s.id}, -1)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded text-xs font-bold text-red-500">-1</button>
+            <button onclick="addXP(${s.id}, -5)" class="bg-slate-100 hover:bg-slate-200 border border-slate-300 px-2 py-1 rounded text-xs font-bold text-red-500">-5</button>
+          </td>
+          <td class="p-3 text-right">
+            <button onclick="deleteStudent(${s.id}, '${s.name}')" class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 px-2.5 py-1 rounded text-xs font-semibold transition">
+              🗑️ 刪除
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 微調單一學生分數 (加/扣分)
+    function addXP(studentId, amount) {
+      const students = getStudents();
+      const target = students.find(s => s.id === studentId);
+      if (target) {
+        target.xp = Math.max(0, target.xp + amount); // 防止減到負數
+        saveStudents(students);
+      }
+    }
+
+    // 全班性增加點數
+    function addXPToClass(amount) {
+      const selectedClass = document.getElementById('class-select').value;
+      const students = getStudents();
+
+      if (selectedClass === 'ALL') {
+        if (!confirm("確定要為「全校所有學生」各加 1 分嗎？")) return;
+        students.forEach(s => s.xp += amount);
+      } else {
+        const classStudents = students.filter(s => s.class === selectedClass);
+        if (classStudents.length === 0) {
+          alert("該班級無學生可加分！");
+          return;
+        }
+        students.forEach(s => {
+          if (s.class === selectedClass) {
+            s.xp = Math.max(0, s.xp + amount);
+          }
+        });
+      }
+
+      saveStudents(students);
+      alert(selectedClass === 'ALL' ? "已為全校學生加 1 分！" : `已為 ${selectedClass} 班全體學生加 1 分！`);
+    }
+
+    // 手動新增單一學生
+    function addSingleStudent(e) {
+      e.preventDefault();
+      const className = document.getElementById('new-class').value.trim();
+      const name = document.getElementById('new-name').value.trim();
+      const xp = parseInt(document.getElementById('new-xp').value) || 0;
+
+      if (!className || !name) {
+        alert("請填寫班級與姓名！");
+        return;
+      }
+
+      const students = getStudents();
+      const newStudent = {
+        id: Date.now(),
+        class: className,
+        name: name,
+        xp: xp
+      };
+
+      students.push(newStudent);
+      saveStudents(students);
+      initAdminPanel();
+
+      document.getElementById('new-class').value = '';
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-xp').value = '';
+
+      alert(`已成功新增學生：${className} 班 ${name}`);
+    }
+
+    // 刪除學生
+    function deleteStudent(studentId, name) {
+      if (confirm(`確定要刪除「${name}」的資料嗎？此動作無法復原！`)) {
+        const students = getStudents().filter(s => s.id !== studentId);
+        saveStudents(students);
+        initAdminPanel();
+      }
+    }
+
+    // Excel 匯入
+    document.getElementById('excel-file').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+
+        const newStudents = json.map((item, index) => ({
+          id: Date.now() + index,
+          class: String(item['班級'] || item['class'] || "701"),
+          name: String(item['姓名'] || item['name'] || "學生"),
+          xp: Number(item['XP'] || item['積分'] || 0)
+        }));
+
+        if (newStudents.length > 0) {
+          saveStudents(newStudents);
+          initAdminPanel();
+          alert(`成功匯入 ${newStudents.length} 位學生資料！`);
+        } else {
+          alert("Excel 內容格式不符合，請確認包含「班級」與「姓名」標題！");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // 匯出 Excel
+    function exportToExcel() {
+      const students = getStudents();
+      if (students.length === 0) {
+        alert("目前沒有學生資料可供匯出！");
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      const fileDateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+
+      const sortedStudents = [...students].sort((a, b) => a.class.localeCompare(b.class) || b.xp - a.xp);
+
+      const exportData = sortedStudents.map((s, index) => ({
+        "項次": index + 1,
+        "班級": s.class,
+        "姓名": s.name,
+        "累積 XP": s.xp,
+        "獲得稱號": getTitle(s.xp),
+        "報表產生時間": timeStr
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      worksheet['!cols'] = [
+        { wch: 6 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 10 },
+        { wch: 15 },
+        { wch: 20 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "雙中閱讀護照積分表");
+
+      const filename = `雙中閱讀護照積分總表_${fileDateStr}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+    }
+
+    // 重置資料
+    function resetSystemData() {
+      if (confirm("確定要重置所有學生資料嗎？此動作無法復原！")) {
+        localStorage.removeItem('school_reading_students');
+        refreshAll();
+        initAdminPanel();
+        alert("系統已重置！");
+      }
+    }
+
+    // 重新整理頁面資料
+    function refreshAll() {
+      renderLeaderboard();
+      renderClassRank();
+      if (!document.getElementById('admin-panel').classList.contains('hidden')) {
+        renderAdminStudents();
+      }
+    }
+
+    refreshAll();
+  </script>
+</body>
+</html>
