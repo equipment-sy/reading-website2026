@@ -1,1 +1,533 @@
+<!DOCTYPE html><html lang="zh-TW"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>雙中閱讀幣銀行--點石成金閱天下，雲端逐鹿爭鰲頭</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@400;600;800&display=swap');
+    
+    body { 
+      font-family: 'Noto Sans TC', sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+
+    .font-serif-title {
+      font-family: 'Noto Serif TC', serif;
+    }
+
+    .bank-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    }
+
+    .gold-text {
+      background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #92400e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .gold-button {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+    }
+
+    .gold-button:hover {
+      background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #d97706;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    .sync-dot-loading {
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in-content {
+      animation: fade-in 0.25s ease-out;
+    }
+  </style></head><body class="min-h-screen antialiased flex flex-col justify-between">
+
+  <div>
+    <header class="bg-white/90 border-b border-amber-200/80 sticky top-0 z-50 shadow-sm backdrop-blur-md">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-3">
+        
+        <div class="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-200 flex items-center justify-center shadow-sm">
+            <span class="text-xl">🏛️</span>
+          </div>
+          <div class="text-center md:text-left">
+            <h1 class="text-lg sm:text-xl font-bold font-serif-title gold-text tracking-wide">雙中閱讀幣銀行</h1>
+            <p class="text-[10px] sm:text-xs text-amber-800/80 font-semibold tracking-wider">點石成金閱天下，雲端逐鹿爭鰲頭</p>
+          </div>
+        </div>
+        
+        <nav class="flex w-full md:w-auto justify-center space-x-1.5 sm:space-x-2">
+          <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 gold-button shadow-sm active:scale-95">🏛️ 個人財富榜</button>
+          <button onclick="switchTab('classRank')" id="btn-classRank" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🏢 班級金庫榜</button>
+          <button onclick="switchTab('admin')" id="btn-admin" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🔑 行長金庫後台</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-3 sm:p-6">
+
+      <section id="tab-leaderboard" class="space-y-4 sm:space-y-6">
+
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors" id="sync-status-badge">
+            <span id="sync-status-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <span id="sync-status">初始化中...</span>
+          </div>
+          <button onclick="fetchGoogleSheetsData()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1 active:scale-95">
+            🔄 重新同步學生名冊
+          </button>
+        </div>
+
+        <div class="bank-card p-4 sm:p-6 rounded-2xl grid grid-cols-3 text-center gap-2 sm:gap-4 relative overflow-hidden">
+          <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+          <div class="p-1">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">總開戶儲戶數</p>
+            <p id="stat-total-students" class="text-base sm:text-2xl font-extrabold text-amber-600 mt-1">0 人</p>
+          </div>
+          <div class="p-1 border-x border-slate-200">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">全行總存款 (閱讀幣)</p>
+            <p id="stat-total-xp" class="text-base sm:text-2xl font-extrabold text-emerald-600 mt-1">0 幣</p>
+          </div>
+          <div class="p-1">
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">首席富豪首富</p>
+            <p id="stat-top-player" class="text-base sm:text-2xl font-extrabold gold-text mt-1 truncate">-</p>
+          </div>
+        </div>
+
+        <div class="bank-card rounded-2xl p-4 sm:p-6">
+          <div class="flex flex-wrap gap-2 mb-4" id="grade-filter-tabs">
+            <button onclick="setGradeFilter('ALL')" data-grade="ALL" class="grade-tab-btn gold-button px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95">🏫 全校排行</button>
+            <button onclick="setGradeFilter('7')" data-grade="7" class="grade-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95">7️⃣ 七年級</button>
+            <button onclick="setGradeFilter('8')" data-grade="8" class="grade-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95">8️⃣ 八年級</button>
+            <button onclick="setGradeFilter('9')" data-grade="9" class="grade-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95">9️⃣ 九年級</button>
+          </div>
+          <h2 id="leaderboard-title" class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏆 全校 個人閱讀幣儲蓄富豪榜 (TOP 15)</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
+              <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
+                <tr>
+                  <th class="p-3">席次</th>
+                  <th class="p-3">學號/座號</th>
+                  <th class="p-3">儲戶戶名</th>
+                  <th class="p-3">所屬分行 (班級)</th>
+                  <th class="p-3">閱讀幣總資產</th>
+                  <th class="p-3">財富階級等級</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-classRank" class="space-y-4 sm:space-y-6 hidden">
+        <div class="bank-card rounded-2xl p-4 sm:p-6">
+          <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏢 班級分行儲蓄資產總榜</h2>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
+              <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
+                <tr>
+                  <th class="p-3">排名</th>
+                  <th class="p-3">分行名稱</th>
+                  <th class="p-3">班級閱讀幣總資產</th>
+                  <th class="p-3">分行資本評級</th>
+                </tr>
+              </thead>
+              <tbody id="class-rank-body" class="divide-y divide-slate-100">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-admin" class="space-y-4 sm:space-y-6 hidden">
+        
+        <div id="admin-login-card" class="max-w-md mx-auto bank-card p-6 rounded-2xl space-y-4 mt-6">
+          <h2 class="text-lg sm:text-xl font-bold text-center text-amber-800 font-serif-title">🔑 金庫最高密鑰驗證</h2>
+          <input type="password" id="admin-pass" placeholder="請輸入行長安全密碼" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-300 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white" onkeydown="if(event.key==='Enter') checkAdminLogin()">
+          <button onclick="checkAdminLogin()" class="w-full gold-button font-bold py-3 rounded-xl transition shadow-sm active:scale-98">驗證登入金庫</button>
+          <p class="text-center text-xs text-amber-700 font-semibold pt-2">雙園書屋</p>
+        </div>
+
+        <div id="admin-panel" class="hidden space-y-4 sm:space-y-6">
+          <div class="max-w-md mx-auto bank-card p-6 rounded-2xl space-y-4 mt-2 text-center">
+            <h2 class="text-lg sm:text-xl font-bold text-amber-800 font-serif-title">📊 前往 Google 試算表編輯</h2>
+            <p class="text-xs text-slate-500 leading-relaxed">閱讀幣的增減、學生名冊的新增刪除，請直接在試算表中修改，存檔後最多 60 秒前台就會自動更新。</p>
+            <a id="sheet-edit-link" href="#" target="_blank" rel="noopener"
+              class="inline-flex items-center justify-center gap-2 gold-button font-bold py-3 px-4 rounded-xl transition text-sm shadow-sm active:scale-98 w-full">
+              📝 開啟試算表編輯
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="mt-8 py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+    <div class="max-w-6xl mx-auto px-4 space-y-1">
+      <p class="font-medium text-slate-700">🏛️ 雙中閱讀幣銀行系統</p>
+      <p class="text-amber-700 font-bold tracking-widest text-xs">雙園書屋</p>
+    </div>
+  </footer>
+
+  <script>
+    // 前台資料讀取：改用 Apps Script 的 doGet 端點，由後端一次把「所有分頁」
+    // （例如 701、702...901 各班分頁）的資料合併好再回傳，不會只抓到第一頁的資料。
+    // 這個端點跟後台登入驗證是同一個 /exec 網址，已確認可用 fetch() 正常讀取、無 CORS 問題。
+
+    // 請務必把 Google Apps Script 部署後產生、結尾為 /exec 的網址貼在下面兩個引號中間。
+    const DEFAULT_GAS_URL = "https://script.google.com/macros/s/AKfycbwCSzqUdpr2z3ee1DF4_C5kt_bTJKLUWAkJfgEZBBWIHDSK9tb7onJWWzhe2Hu2Qc-r/exec";
+
+    // 「行長金庫後台」裡的試算表編輯捷徑連結（登入後才看得到）。
+    // 請貼上你的 Google 試算表「編輯」網址，格式通常像：
+    // https://docs.google.com/spreadsheets/d/xxxxxxxxxxxxxxxxxxxx/edit
+    const SPREADSHEET_EDIT_URL = "https://docs.google.com/spreadsheets/d/1F8mnSn8grEmzN4qBSsS0zHDd2mI4Z3Yc2WDaf35EuMc/edit?usp=sharing";
+
+    const defaultData = [];
+
+    function getGasUrl() {
+      return DEFAULT_GAS_URL.trim();
+    }
+
+    // 更新同步狀態徽章的顏色與文字：loading（琥珀色，閃爍）、success（綠色）、error（紅色）
+    function setSyncBadge(state, text) {
+      const badge = document.getElementById('sync-status-badge');
+      const dot = document.getElementById('sync-status-dot');
+      const label = document.getElementById('sync-status');
+
+      label.innerText = text;
+
+      const stateStyles = {
+        loading: { badge: 'bg-slate-100 text-slate-600', dot: 'bg-amber-500 sync-dot-loading' },
+        success: { badge: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-500' },
+        error:   { badge: 'bg-rose-50 text-rose-700', dot: 'bg-rose-500' },
+      };
+      const style = stateStyles[state] || stateStyles.loading;
+
+      badge.className = `inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${style.badge}`;
+      dot.className = `w-2 h-2 rounded-full ${style.dot}`;
+    }
+
+    async function fetchGoogleSheetsData() {
+      const url = getGasUrl();
+
+      if (!url) {
+        setSyncBadge('error', "尚未設定 Apps Script 網址");
+        refreshAll();
+        return;
+      }
+
+      setSyncBadge('loading', "正在更新中...");
+
+      try {
+        // 加上時間戳記避免瀏覽器快取住舊資料
+        const response = await fetch(`${url}?_t=${Date.now()}`);
+
+        if (!response.ok) {
+          throw new Error(`伺服器回應錯誤，狀態碼 ${response.status}`);
+        }
+
+        const matrixData = await response.json();
+        const parsedData = parseMatrixToStudents(matrixData);
+
+        if (parsedData.length > 0) {
+          saveStudents(parsedData);
+          const now = new Date();
+          const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+          setSyncBadge('success', `已於 ${timeStr} 成功載入 ${parsedData.length} 位學生資料`);
+          return;
+        } else {
+          setSyncBadge('error', "連線成功，但讀到 0 筆資料。請確認試算表標題列包含「班級」與「姓名」欄位");
+        }
+      } catch (e) {
+        console.error("試算表讀取失敗:", e);
+        let hint = "";
+        if (e instanceof TypeError) {
+          hint = "（可能是網址錯誤、Apps Script 尚未重新部署，或部署時存取權限沒有設成「任何人」）";
+        } else if (e instanceof SyntaxError) {
+          hint = "（伺服器回傳的不是 JSON，請確認 doGet 程式碼已正確更新並重新部署）";
+        }
+        setSyncBadge('error', `同步失敗 - ${e.message} ${hint}，已載入暫存資料`);
+      }
+
+      refreshAll();
+    }
+
+    function parseMatrixToStudents(data) {
+      if (!data || data.length < 2) return [];
+
+      const headers = data[0].map(h => String(h).trim());
+      
+      const classIdx = headers.findIndex(h => h.includes("班級") || h.toLowerCase().includes("class"));
+      const nameIdx = headers.findIndex(h => h.includes("姓名") || h.toLowerCase().includes("name"));
+      const studentIdIdx = headers.findIndex(h => h.includes("學號") || h.includes("座號") || h.toLowerCase().includes("student_id") || h.toLowerCase().includes("id"));
+      const xpIdx = headers.findIndex(h => h.includes("閱讀幣") || h.includes("點數") || h.includes("幣") || h.toLowerCase().includes("xp") || h.includes("積分"));
+
+      if (classIdx === -1 || nameIdx === -1) {
+        console.error("找不到班級或姓名欄位，欄位標題為:", headers);
+        return [];
+      }
+
+      const existingStudents = getStudents();
+      const existingXpMap = {};
+      existingStudents.forEach(s => {
+        existingXpMap[`${s.class}_${s.name}`] = s.xp;
+      });
+
+      const students = [];
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || row.length === 0) continue;
+        
+        if (row[nameIdx]) {
+          const className = String(row[classIdx] || "未指定");
+          const name = String(row[nameIdx] || "儲戶");
+          const studentId = studentIdIdx !== -1 ? String(row[studentIdIdx] || "") : "";
+          
+          let xp = 0;
+          if (xpIdx !== -1 && row[xpIdx] !== undefined && row[xpIdx] !== "") {
+            xp = parseInt(row[xpIdx]) || 0;
+          } else if (existingXpMap[`${className}_${name}`] !== undefined) {
+            xp = existingXpMap[`${className}_${name}`];
+          }
+
+          students.push({
+            id: Date.now() + i,
+            studentId: studentId,
+            class: className,
+            name: name,
+            xp: xp
+          });
+        }
+      }
+      return students;
+    }
+
+    function getStudents() {
+      const data = localStorage.getItem('school_reading_students');
+      return data ? JSON.parse(data) : defaultData;
+    }
+
+    function saveStudents(data) {
+      localStorage.setItem('school_reading_students', JSON.stringify(data));
+      refreshAll();
+    }
+
+    function maskName(name) {
+      if (!name) return "";
+      if (name.length <= 2) return name[0] + "○";
+      return name[0] + "○" + name.slice(2);
+    }
+
+    function getLevelInfo(xp) {
+      if (xp >= 200) {
+        return { badge: "👑 首席富豪級", style: "bg-amber-100 text-amber-800 border border-amber-300" };
+      } else if (xp >= 100) {
+        return { badge: "💎 尊榮大戶級", style: "bg-sky-100 text-sky-800 border border-sky-300" };
+      } else if (xp >= 30) {
+        return { badge: "🪙 穩健儲戶級", style: "bg-emerald-100 text-emerald-800 border border-emerald-300" };
+      } else {
+        return { badge: "🌱 開戶新星級", style: "bg-slate-100 text-slate-700 border border-slate-300" };
+      }
+    }
+
+    function switchTab(tabName) {
+      ['leaderboard', 'classRank', 'admin'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`btn-${t}`).classList.remove('gold-button');
+        document.getElementById(`btn-${t}`).classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+      });
+      
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`btn-${tabName}`).classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
+      document.getElementById(`btn-${tabName}`).classList.add('gold-button');
+    }
+
+    let currentGradeFilter = 'ALL';
+
+    function getGrade(className) {
+      const c = String(className || '').trim();
+      if (c.startsWith('7')) return '7';
+      if (c.startsWith('8')) return '8';
+      if (c.startsWith('9')) return '9';
+      return 'OTHER';
+    }
+
+    function gradeLabel(grade) {
+      if (grade === '7') return '七年級';
+      if (grade === '8') return '八年級';
+      if (grade === '9') return '九年級';
+      return '全校';
+    }
+
+    function setGradeFilter(grade) {
+      currentGradeFilter = grade;
+      document.querySelectorAll('.grade-tab-btn').forEach(btn => {
+        if (btn.dataset.grade === grade) {
+          btn.classList.add('gold-button');
+          btn.classList.remove('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700', 'border', 'border-slate-200');
+        } else {
+          btn.classList.remove('gold-button');
+          btn.classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700', 'border', 'border-slate-200');
+        }
+      });
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      const allStudents = getStudents();
+      const students = currentGradeFilter === 'ALL'
+        ? allStudents
+        : allStudents.filter(s => getGrade(s.class) === currentGradeFilter);
+
+      const sorted = [...students].sort((a, b) => b.xp - a.xp);
+
+      document.getElementById('leaderboard-title').innerText = `🏆 ${gradeLabel(currentGradeFilter)} 個人閱讀幣儲蓄富豪榜 (TOP 15)`;
+      document.getElementById('stat-total-students').innerText = `${students.length} 人`;
+      document.getElementById('stat-total-xp').innerText = `${students.reduce((acc, s) => acc + s.xp, 0)} 閱讀幣`;
+      document.getElementById('stat-top-player').innerText = sorted[0] ? maskName(sorted[0].name) : '-';
+
+      const tbody = document.getElementById('leaderboard-body');
+      if (sorted.length === 0) {
+        tbody.innerHTML = `<tr class="fade-in-content"><td colspan="6" class="p-6 text-center text-slate-400">目前還沒有資料，正在同步中或請稍候重新整理</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sorted.slice(0, 15).map((s, idx) => {
+        const level = getLevelInfo(s.xp);
+        return `
+          <tr class="hover:bg-slate-50 transition fade-in-content">
+            <td class="p-3 font-bold text-slate-700">${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}</td>
+            <td class="p-3 text-slate-400 font-mono text-xs">${s.studentId || '-'}</td>
+            <td class="p-3 font-medium text-slate-800">${maskName(s.name)}</td>
+            <td class="p-3 text-slate-500">${s.class} 班</td>
+            <td class="p-3 font-bold text-amber-600">${s.xp} 幣</td>
+            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${level.style}">${level.badge}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderClassRank() {
+      const students = getStudents();
+      const classMap = {};
+
+      students.forEach(s => {
+        classMap[s.class] = (classMap[s.class] || 0) + s.xp;
+      });
+
+      const sortedClasses = Object.keys(classMap)
+        .map(c => ({ class: c, xp: classMap[c] }))
+        .sort((a, b) => b.xp - a.xp);
+
+      const tbody = document.getElementById('class-rank-body');
+      if (sortedClasses.length === 0) {
+        tbody.innerHTML = `<tr class="fade-in-content"><td colspan="4" class="p-6 text-center text-slate-400">目前還沒有資料，正在同步中或請稍候重新整理</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = sortedClasses.map((c, idx) => `
+        <tr class="hover:bg-slate-50 transition fade-in-content">
+          <td class="p-3 font-bold text-slate-700">${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}</td>
+          <td class="p-3 font-medium text-slate-800">${c.class} 班分行</td>
+          <td class="p-3 font-bold text-emerald-600">${c.xp} 閱讀幣</td>
+          <td class="p-3 font-medium text-slate-600">${c.xp > 500 ? '🏛️ 旗艦金庫分行' : '🏦 標竿成長分行'}</td>
+        </tr>
+      `).join('');
+    }
+
+    async function checkAdminLogin() {
+      const pass = document.getElementById('admin-pass').value;
+      const url = getGasUrl();
+
+      if (!pass) {
+        alert("請輸入密碼！");
+        return;
+      }
+      if (!url) {
+        alert("尚未設定 Google Apps Script 網址，請先完成連線設定。");
+        return;
+      }
+
+      const loginBtn = document.querySelector('#admin-login-card button');
+      const originalText = loginBtn.innerText;
+      loginBtn.innerText = "驗證中...";
+      loginBtn.disabled = true;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // 避免觸發 CORS 預檢請求
+          body: JSON.stringify({ action: 'login', password: pass })
+        });
+
+        if (!response.ok) {
+          throw new Error(`伺服器回應錯誤 (狀態碼: ${response.status})`);
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+          document.getElementById('admin-login-card').classList.add('hidden');
+          document.getElementById('admin-panel').classList.remove('hidden');
+          document.getElementById('admin-pass').value = '';
+
+          const sheetLink = document.getElementById('sheet-edit-link');
+          if (SPREADSHEET_EDIT_URL && SPREADSHEET_EDIT_URL.trim() !== "") {
+            sheetLink.href = SPREADSHEET_EDIT_URL.trim();
+          } else {
+            sheetLink.href = '#';
+            sheetLink.onclick = (ev) => { ev.preventDefault(); alert('尚未設定試算表編輯網址，請在程式碼中的 SPREADSHEET_EDIT_URL 貼上網址。'); };
+          }
+        } else {
+          alert("安全密碼錯誤，無法進入金庫後台！");
+        }
+      } catch (e) {
+        console.error("登入驗證失敗:", e);
+        alert(`登入驗證失敗：${e.message}\n請確認 Apps Script 已重新部署且網址正確。`);
+      } finally {
+        loginBtn.innerText = originalText;
+        loginBtn.disabled = false;
+      }
+    }
+
+    function refreshAll() {
+      renderLeaderboard();
+      renderClassRank();
+    }
+
+    // 頁面載入時直接開始同步，無需其他設定
+    fetchGoogleSheetsData();
+
+    // 每 60 秒自動重新同步一次，讓所有訪客看到的數字接近即時更新
+    setInterval(fetchGoogleSheetsData, 60000);
+  </script></body></html>
 
