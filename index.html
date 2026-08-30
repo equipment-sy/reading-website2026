@@ -84,9 +84,10 @@
           </div>
         </div>
         
-        <nav class="flex w-full md:w-auto justify-center space-x-1.5 sm:space-x-2">
+        <nav class="flex w-full md:w-auto justify-center flex-wrap gap-1.5 sm:gap-2">
           <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 gold-button shadow-sm active:scale-95">🏛️ 個人財富榜</button>
           <button onclick="switchTab('classRank')" id="btn-classRank" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🏢 班級金庫榜</button>
+          <button onclick="switchTab('standard')" id="btn-standard" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">📖 集幣標準</button>
           <button onclick="switchTab('admin')" id="btn-admin" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🔑 行長金庫</button>
         </nav>
       </div>
@@ -176,6 +177,91 @@
               </tbody>
             </table>
           </div>
+        </div>
+      </section>
+
+      <section id="tab-standard" class="space-y-4 sm:space-y-6 hidden">
+        <div class="bank-card rounded-2xl p-4 sm:p-6">
+          <h2 class="text-base sm:text-lg font-bold mb-1 flex items-center gap-2 text-amber-800 font-serif-title">📖 雙中閱讀幣銀行儲值標準</h2>
+          <p class="text-xs text-slate-500 mb-4">以下為閱讀幣發放規則，實際存入以試算表紀錄為準。</p>
+
+          <div class="space-y-5" id="standard-list">
+            <div>
+              <h3 class="text-xs font-bold text-amber-700 mb-2 tracking-wide">📚 日常閱讀行為</h3>
+              <div class="space-y-2">
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">晨讀時間認真晨讀</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+1 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">向圖書館借一本書（漫畫書除外）</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+1 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">於雙園書屋粉絲團 FB 或雙園國中粉絲團 FB 相關貼文按讚</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+1 幣</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xs font-bold text-amber-700 mb-2 tracking-wide">📝 閱讀學習單成績</h3>
+              <div class="space-y-2">
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">閱讀學習單成績獲 B+</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+1 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">閱讀學習單成績獲 B++</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+2 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">閱讀學習單成績獲 A</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+3 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">閱讀學習單成績獲 A+</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+4 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">閱讀學習單成績獲 A++</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+5 幣</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xs font-bold text-amber-700 mb-2 tracking-wide">🏆 發表與競賽</h3>
+              <div class="space-y-2">
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">短文榮登雙中青年校刊</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+10 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                  <p class="font-medium text-slate-800 text-sm">400 字以上文章榮登雙中青年校刊</p>
+                  <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">+20 幣</span>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 gap-2">
+                  <p class="font-medium text-slate-800 text-sm mb-2">文章作品榮登各報紙或相關網站</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">短文：+30 幣</span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">400 字以上文章：+60 幣</span>
+                  </div>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3.5 gap-2">
+                  <p class="font-medium text-slate-800 text-sm mb-2">校外徵文比賽獲獎</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">入圍：+20 幣</span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">佳作：+40 幣</span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">優等：+60 幣</span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">全市特優：+80 幣</span>
+                    <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">全國特優：+100 幣</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -372,7 +458,7 @@
     }
 
     function switchTab(tabName) {
-      ['leaderboard', 'classRank', 'admin'].forEach(t => {
+      ['leaderboard', 'classRank', 'standard', 'admin'].forEach(t => {
         document.getElementById(`tab-${t}`).classList.add('hidden');
         document.getElementById(`btn-${t}`).classList.remove('gold-button');
         document.getElementById(`btn-${t}`).classList.add('bg-slate-100', 'hover:bg-slate-200', 'text-slate-700');
