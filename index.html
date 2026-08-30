@@ -87,7 +87,7 @@
         <nav class="flex w-full md:w-auto justify-center space-x-1.5 sm:space-x-2">
           <button onclick="switchTab('leaderboard')" id="btn-leaderboard" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 gold-button shadow-sm active:scale-95">🏛️ 個人財富榜</button>
           <button onclick="switchTab('classRank')" id="btn-classRank" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🏢 班級金庫榜</button>
-          <button onclick="switchTab('admin')" id="btn-admin" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🔑 行長金庫後台</button>
+          <button onclick="switchTab('admin')" id="btn-admin" class="flex-1 md:flex-none px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 border border-slate-200">🔑 行長金庫</button>
         </nav>
       </div>
     </header>
@@ -117,7 +117,7 @@
             <p id="stat-total-xp" class="text-base sm:text-2xl font-extrabold text-emerald-600 mt-1">0 幣</p>
           </div>
           <div class="p-1">
-            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">首席富豪首富</p>
+            <p class="text-[11px] sm:text-xs font-semibold text-slate-500">雙中閱讀首富</p>
             <p id="stat-top-player" class="text-base sm:text-2xl font-extrabold gold-text mt-1 truncate">-</p>
           </div>
         </div>
@@ -130,7 +130,12 @@
             <button onclick="setGradeFilter('9')" data-grade="9" class="grade-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95">9️⃣ 九年級</button>
           </div>
           <h2 id="leaderboard-title" class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏆 全校 個人閱讀幣儲蓄富豪榜 (TOP 15)</h2>
-          <div class="overflow-x-auto custom-scrollbar">
+
+          <!-- 手機版：卡片清單 -->
+          <div id="leaderboard-mobile-list" class="sm:hidden space-y-2"></div>
+
+          <!-- 平板/電腦版：表格 -->
+          <div class="hidden sm:block overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
               <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
                 <tr>
@@ -152,7 +157,12 @@
       <section id="tab-classRank" class="space-y-4 sm:space-y-6 hidden">
         <div class="bank-card rounded-2xl p-4 sm:p-6">
           <h2 class="text-base sm:text-lg font-bold mb-3 sm:mb-4 flex items-center gap-2 text-amber-800 font-serif-title">🏢 班級分行儲蓄資產總榜</h2>
-          <div class="overflow-x-auto custom-scrollbar">
+
+          <!-- 手機版：卡片清單 -->
+          <div id="class-rank-mobile-list" class="sm:hidden space-y-2"></div>
+
+          <!-- 平板/電腦版：表格 -->
+          <div class="hidden sm:block overflow-x-auto custom-scrollbar">
             <table class="w-full text-left text-xs sm:text-sm text-slate-700 whitespace-nowrap">
               <thead class="bg-slate-100/80 text-slate-600 uppercase text-[11px] sm:text-xs border-b border-slate-200">
                 <tr>
@@ -418,11 +428,17 @@
       document.getElementById('stat-top-player').innerText = sorted[0] ? maskName(sorted[0].name) : '-';
 
       const tbody = document.getElementById('leaderboard-body');
+      const mobileList = document.getElementById('leaderboard-mobile-list');
+
       if (sorted.length === 0) {
         tbody.innerHTML = `<tr class="fade-in-content"><td colspan="6" class="p-6 text-center text-slate-400">目前還沒有資料，正在同步中或請稍候重新整理</td></tr>`;
+        mobileList.innerHTML = `<div class="fade-in-content text-center text-slate-400 text-sm py-6">目前還沒有資料，正在同步中或請稍候重新整理</div>`;
         return;
       }
-      tbody.innerHTML = sorted.slice(0, 15).map((s, idx) => {
+
+      const top15 = sorted.slice(0, 15);
+
+      tbody.innerHTML = top15.map((s, idx) => {
         const level = getLevelInfo(s.xp);
         return `
           <tr class="hover:bg-slate-50 transition fade-in-content">
@@ -433,6 +449,26 @@
             <td class="p-3 font-bold text-amber-600">${s.xp} 幣</td>
             <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${level.style}">${level.badge}</span></td>
           </tr>
+        `;
+      }).join('');
+
+      mobileList.innerHTML = top15.map((s, idx) => {
+        const level = getLevelInfo(s.xp);
+        const rankDisplay = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        return `
+          <div class="fade-in-content bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-base font-bold text-slate-700 w-8 text-center shrink-0">${rankDisplay}</span>
+              <div class="min-w-0">
+                <p class="font-medium text-slate-800 text-sm truncate">${maskName(s.name)}</p>
+                <p class="text-[11px] text-slate-400">${s.class} 班　學號 ${s.studentId || '-'}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="font-bold text-amber-600 text-sm">${s.xp} 幣</p>
+              <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap ${level.style}">${level.badge}</span>
+            </div>
+          </div>
         `;
       }).join('');
     }
@@ -450,10 +486,14 @@
         .sort((a, b) => b.xp - a.xp);
 
       const tbody = document.getElementById('class-rank-body');
+      const mobileList = document.getElementById('class-rank-mobile-list');
+
       if (sortedClasses.length === 0) {
         tbody.innerHTML = `<tr class="fade-in-content"><td colspan="4" class="p-6 text-center text-slate-400">目前還沒有資料，正在同步中或請稍候重新整理</td></tr>`;
+        mobileList.innerHTML = `<div class="fade-in-content text-center text-slate-400 text-sm py-6">目前還沒有資料，正在同步中或請稍候重新整理</div>`;
         return;
       }
+
       tbody.innerHTML = sortedClasses.map((c, idx) => `
         <tr class="hover:bg-slate-50 transition fade-in-content">
           <td class="p-3 font-bold text-slate-700">${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}</td>
@@ -462,6 +502,22 @@
           <td class="p-3 font-medium text-slate-600">${c.xp > 500 ? '🏛️ 旗艦金庫分行' : '🏦 標竿成長分行'}</td>
         </tr>
       `).join('');
+
+      mobileList.innerHTML = sortedClasses.map((c, idx) => {
+        const rankDisplay = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+        return `
+          <div class="fade-in-content bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-base font-bold text-slate-700 w-8 text-center shrink-0">${rankDisplay}</span>
+              <div class="min-w-0">
+                <p class="font-medium text-slate-800 text-sm truncate">${c.class} 班分行</p>
+                <p class="text-[11px] text-slate-500">${c.xp > 500 ? '🏛️ 旗艦金庫分行' : '🏦 標竿成長分行'}</p>
+              </div>
+            </div>
+            <p class="font-bold text-emerald-600 text-sm shrink-0">${c.xp} 幣</p>
+          </div>
+        `;
+      }).join('');
     }
 
     async function checkAdminLogin() {
@@ -530,4 +586,3 @@
     // 每 60 秒自動重新同步一次，讓所有訪客看到的數字接近即時更新
     setInterval(fetchGoogleSheetsData, 60000);
   </script></body></html>
-
